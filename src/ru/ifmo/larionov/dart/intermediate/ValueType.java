@@ -52,4 +52,9 @@ public class ValueType {
     public Object getDefaultValue() {
         return defaultValue;
     }
+
+    @Override
+    public String toString() {
+        return typeName;
+    }
 }

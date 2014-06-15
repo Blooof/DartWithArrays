@@ -1,12 +1,12 @@
 package ru.ifmo.larionov.dart.intermediate.generation;
 
 import org.objectweb.asm.MethodVisitor;
-import ru.ifmo.larionov.dart.grammar.SimpleDartWithArraysParser;
 import ru.ifmo.larionov.dart.intermediate.SymbolTable;
 import ru.ifmo.larionov.dart.intermediate.ValueType;
 import ru.ifmo.larionov.dart.intermediate.Variable;
 
 import static org.objectweb.asm.Opcodes.*;
+import static ru.ifmo.larionov.dart.grammar.SimpleDartWithArraysParser.*;
 import static ru.ifmo.larionov.dart.intermediate.generation.TypeChecker.typeCheck;
 
 /**
@@ -21,11 +21,11 @@ public class ExpressionVisitor {
         this.method = method;
     }
 
-    public ValueType visitExpression(SimpleDartWithArraysParser.ExpressionContext expression) {
+    public ValueType visitExpression(ExpressionContext expression) {
         return visitAriphExpression(expression.ariphExpression());
     }
 
-    private ValueType visitSimpleExpression(SimpleDartWithArraysParser.SimpleExpressionContext simple) {
+    private ValueType visitSimpleExpression(SimpleExpressionContext simple) {
         if (simple.ident != null) {
             String name = simple.IDENT().getText();
             Variable var = symbolTable.findVariable(name);
@@ -46,7 +46,7 @@ public class ExpressionVisitor {
         }
     }
 
-    public ValueType visitAriphExpression(SimpleDartWithArraysParser.AriphExpressionContext ariphExpression) {
+    public ValueType visitAriphExpression(AriphExpressionContext ariphExpression) {
         if (ariphExpression.ariphExpression() != null) {
             ValueType lValueType = visitAriphExpression(ariphExpression.ariphExpression());
             ValueType rValueType = visitAriphTerm(ariphExpression.ariphTerm());
@@ -65,7 +65,7 @@ public class ExpressionVisitor {
         }
     }
 
-    private ValueType visitAriphTerm(SimpleDartWithArraysParser.AriphTermContext ariphTerm) {
+    private ValueType visitAriphTerm(AriphTermContext ariphTerm) {
         if (ariphTerm.ariphTerm() != null) {
             ValueType lValueType = visitAriphTerm(ariphTerm.ariphTerm());
             ValueType rValueType = visitAriphFactor(ariphTerm.ariphFactor());
@@ -84,7 +84,7 @@ public class ExpressionVisitor {
         }
     }
 
-    private ValueType visitAriphFactor(SimpleDartWithArraysParser.AriphFactorContext ariphFactor) {
+    private ValueType visitAriphFactor(AriphFactorContext ariphFactor) {
         if (ariphFactor.num != null) {
             int n = Integer.parseInt(ariphFactor.getText());
             method.visitLdcInsn(n);

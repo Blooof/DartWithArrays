@@ -24,19 +24,28 @@ public class FunctionDeclarationVisitor {
     private ClassWriter writer;
     private MethodVisitor method;
     private ValueType returnType;
+    private CycleControl cycleControl;
 
     public FunctionDeclarationVisitor(SymbolTable symbolTable, ClassWriter writer) {
         this.symbolTable = symbolTable;
         this.writer = writer;
+        cycleControl = new CycleControl();
     }
 
-    public void visitFunctionDeclaration(SimpleDartWithArraysParser.FunctionDeclarationContext function) {
+    public void defineFunction(FunctionDeclarationContext function) {
+        Function f = buildFunction(function);
+        symbolTable.defineFunction(f);
+    }
+
+    public void visitFunctionDeclaration(FunctionDeclarationContext function) {
         symbolTable.newScope();
 
         Function f = buildFunction(function);
-        symbolTable.defineFunction(f);
         returnType = f.getReturnValueType();
 
+        f.getArguments()
+                .stream()
+                .forEach(symbolTable::defineVariable);
         Type[] argTypes = f.getArguments()
                 .stream()
                 .flatMap(variable -> Stream.of(variable.getValueType().toAsmType()))
@@ -50,7 +59,7 @@ public class FunctionDeclarationVisitor {
         }
         method = writer.visitMethod(ACC_PUBLIC | ACC_STATIC, f.getName(), descriptor, null, null);
 
-        visitBlock(function.functionBody().block());
+        visitBlock(function.functionBody().block(), false);
 
         method.visitInsn(Opcodes.RETURN);
         method.visitMaxs(0, 0);
@@ -59,17 +68,22 @@ public class FunctionDeclarationVisitor {
         symbolTable.dropScope();
     }
 
-    private void visitBlock(BlockContext block) {
-        symbolTable.newScope();
+    private void visitBlock(BlockContext block, boolean newScope) {
+        if (newScope) {
+            symbolTable.newScope();
+        }
         for (BlockStatementContext blockStatement : block.blockStatement()) {
             visitBlockStatement(blockStatement);
         }
-        symbolTable.dropScope();
+        if (newScope) {
+            symbolTable.dropScope();
+        }
     }
 
     private void visitBlockStatement(BlockStatementContext blockStatement) {
         if (blockStatement.variableDeclarationStatement() != null) {
-            visitVariableDeclaration(blockStatement.variableDeclarationStatement().variableDeclaration(), method);
+            new VariableDeclarationVisitor(symbolTable, method)
+                    .visitVariableDeclaration(blockStatement.variableDeclarationStatement().variableDeclaration());
         } else {
             visitStatement(blockStatement.statement());
         }
@@ -79,13 +93,15 @@ public class FunctionDeclarationVisitor {
         if (statement.expression() != null) {
             new ExpressionVisitor(symbolTable, method).visitExpression(statement.expression());
         } else if (statement.assignment() != null) {
-            visitAssignment(statement.assignment(), method);
+            new AssignmentVisitor(symbolTable, method).visitAssignment(statement.assignment());
         } else if (statement.block() != null) {
-            visitBlock(statement.block());
+            visitBlock(statement.block(), true);
         } else if (statement.jumpStatement() != null) {
             visitJumpStatement(statement.jumpStatement());
         } else if (statement.IF() != null) {
             new IfStatementVisitor(this, symbolTable, method).visitIfStatement(statement);
+        } else if (statement.forStatement() != null) {
+            new CycleStatementVisitor(this, symbolTable, method).visitForStatement(statement.forStatement());
         }
     }
 
@@ -100,38 +116,10 @@ public class FunctionDeclarationVisitor {
                 method.visitInsn(IRETURN);
             }
             return;
-        }
-        throw new GenerationException("Illegal operation " + jumpStatement.getText());
-    }
-
-    private void visitAssignment(AssignmentContext assignment, MethodVisitor method) {
-        String name = assignment.IDENT().getText();
-        Variable variable = symbolTable.findVariable(name);
-        if (assignment.arrayIdent() == null) {
-            ValueType valueType = new ExpressionVisitor(symbolTable, method).visitExpression(assignment.expression());
-            typeCheck(variable.getValueType(), valueType, assignment.getText());
-            method.visitVarInsn(ISTORE, variable.getId());
+        } else if (jumpStatement.breakSt != null) {
+            method.visitJumpInsn(GOTO, cycleControl.getBreak());
         } else {
-            // TODO array assignment
-        }
-    }
-
-    private void visitVariableDeclaration(SimpleDartWithArraysParser.VariableDeclarationContext variableDeclaration, MethodVisitor method) {
-        ValueType type = ValueType.fromString(variableDeclaration.variableType().getText());
-        for (SimpleDartWithArraysParser.VariableDeclaratorContext declarator : variableDeclaration.variableDeclarators().variableDeclarator()) {
-            String name = declarator.IDENT().getText();
-            Variable variable = new VariableImpl(name, type);
-            symbolTable.defineVariable(variable);
-            if (declarator.variableInitializer() != null) {
-                VariableInitializerContext variableInitializer = declarator.variableInitializer();
-                if (variableInitializer.expression() != null) {
-                    ValueType initType = new ExpressionVisitor(symbolTable, method).visitExpression(variableInitializer.expression());
-                    typeCheck(type, initType, variableDeclaration.getText());
-                    method.visitVarInsn(ISTORE, variable.getId());
-                } else {
-                    // TODO array init
-                }
-            }
+            method.visitJumpInsn(GOTO, cycleControl.getContinue());
         }
     }
 
@@ -154,5 +142,9 @@ public class FunctionDeclarationVisitor {
         ValueType returnValueType = ValueType.fromString(function.typeIdentifier().getText());
         List<Variable> args = parseArguments(function);
         return new FunctionImpl(name, returnValueType, args);
+    }
+
+    public CycleControl getCycleControl() {
+        return cycleControl;
     }
 }

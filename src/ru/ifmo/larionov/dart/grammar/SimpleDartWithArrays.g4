@@ -4,7 +4,6 @@ options {
     language = Java;
 }
 
-
 /*
  * Parser rules
  */
@@ -37,11 +36,11 @@ assignment : IDENT arrayIdent? EQUAL expression;
 
 forStatement : FOR LPAREN forControl RPAREN statement;
 
-forControl : forInit? SEMICOLON expression? SEMICOLON forUpdate?;
+forControl : forInit? SEMICOLON logicalOr? SEMICOLON forUpdate?;
 
-forInit : variableDeclaration | expressionList;
+forInit : variableDeclaration;
 
-forUpdate : expressionList;
+forUpdate : assignment;
 
 parExpression : LPAREN logicalOr RPAREN;
 
