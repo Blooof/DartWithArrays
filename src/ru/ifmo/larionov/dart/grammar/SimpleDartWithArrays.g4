@@ -26,11 +26,14 @@ blockStatement : variableDeclarationStatement | statement;
 
 statement 
     : block
+    | assignment
     | expression? SEMICOLON
     | IF parExpression statement (ELSE statement)? 
     | forStatement
     | WHILE parExpression statement
     | jumpStatement;
+
+assignment : IDENT EQUAL expression;
 
 forStatement : FOR LPAREN forControl RPAREN statement;
 
@@ -52,7 +55,7 @@ arrayInitializer : LSQUARE expressionList RSQUARE;
 
 expression : funcCall | ariphExpression;
 
-funcCall : IDENT LPAREN expressionList RPAREN; 
+funcCall : IDENT LPAREN expressionList? RPAREN;
 
 logicalOr : logicalAnd (OR logicalAnd)?;
 

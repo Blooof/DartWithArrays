@@ -9,4 +9,6 @@ public interface Variable {
     ValueType getValueType();
 
     int getId();
+
+    void setId(int id);
 }
