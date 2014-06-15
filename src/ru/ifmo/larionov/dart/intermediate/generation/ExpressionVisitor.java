@@ -46,7 +46,7 @@ public class ExpressionVisitor {
         }
     }
 
-    private ValueType visitAriphExpression(SimpleDartWithArraysParser.AriphExpressionContext ariphExpression) {
+    public ValueType visitAriphExpression(SimpleDartWithArraysParser.AriphExpressionContext ariphExpression) {
         if (ariphExpression.ariphExpression() != null) {
             ValueType lValueType = visitAriphExpression(ariphExpression.ariphExpression());
             ValueType rValueType = visitAriphTerm(ariphExpression.ariphTerm());

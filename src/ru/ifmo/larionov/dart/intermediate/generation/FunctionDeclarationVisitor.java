@@ -23,6 +23,7 @@ public class FunctionDeclarationVisitor {
     private SymbolTable symbolTable;
     private ClassWriter writer;
     private MethodVisitor method;
+    private ValueType returnType;
 
     public FunctionDeclarationVisitor(SymbolTable symbolTable, ClassWriter writer) {
         this.symbolTable = symbolTable;
@@ -34,6 +35,7 @@ public class FunctionDeclarationVisitor {
 
         Function f = buildFunction(function);
         symbolTable.defineFunction(f);
+        returnType = f.getReturnValueType();
 
         Type[] argTypes = f.getArguments()
                 .stream()
@@ -73,14 +75,33 @@ public class FunctionDeclarationVisitor {
         }
     }
 
-    private void visitStatement(StatementContext statement) {
+    public void visitStatement(StatementContext statement) {
         if (statement.expression() != null) {
             new ExpressionVisitor(symbolTable, method).visitExpression(statement.expression());
         } else if (statement.assignment() != null) {
             visitAssignment(statement.assignment(), method);
         } else if (statement.block() != null) {
             visitBlock(statement.block());
+        } else if (statement.jumpStatement() != null) {
+            visitJumpStatement(statement.jumpStatement());
+        } else if (statement.IF() != null) {
+            new IfStatementVisitor(this, symbolTable, method).visitIfStatement(statement);
         }
+    }
+
+    private void visitJumpStatement(JumpStatementContext jumpStatement) {
+        if (jumpStatement.returnSt != null) {
+            if (jumpStatement.expression() == null) {
+                typeCheck(returnType, ValueType.VOID, jumpStatement.getText());
+                method.visitInsn(Opcodes.RETURN);
+            } else {
+                ValueType valueType = new ExpressionVisitor(symbolTable, method).visitExpression(jumpStatement.expression());
+                typeCheck(returnType, valueType, jumpStatement.getText());
+                method.visitInsn(IRETURN);
+            }
+            return;
+        }
+        throw new GenerationException("Illegal operation " + jumpStatement.getText());
     }
 
     private void visitAssignment(AssignmentContext assignment, MethodVisitor method) {

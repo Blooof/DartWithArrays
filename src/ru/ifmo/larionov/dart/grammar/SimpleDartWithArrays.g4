@@ -28,7 +28,7 @@ statement
     : block
     | assignment SEMICOLON
     | expression? SEMICOLON
-    | IF parExpression statement (ELSE statement)? 
+    | IF parExpression statement (ELSE statement)?
     | forStatement
     | WHILE parExpression statement
     | jumpStatement;
@@ -58,10 +58,12 @@ expression : ariphExpression;
 funcCall : IDENT LPAREN expressionList? RPAREN;
 
 logicalOr : logicalAnd (OR logicalAnd)?;
-
-logicalAnd : relationalExpr (AND relationalExpr);
-
-relationalExpr : ariphExpression REL_OP ariphExpression;
+logicalAnd : relationalExpr (AND relationalExpr)?;
+relationalExpr
+    : id=(TRUE | FALSE)
+    | NOT relationalExpr
+    | ariphExpression relOp=(EE | NE | GE | LE | LESS | MORE) ariphExpression
+    | LPAREN logicalOr RPAREN;
 
 simpleExpression 
     : ident=IDENT arrayIdent?
@@ -121,7 +123,9 @@ EE      : '==';
 NE      : '!=';
 LESS    : '<';
 MORE    : '>';
-REL_OP  : EE | NE | GE | LE | LESS | MORE;
+NOT     : '!';
+TRUE    : 'true';
+FALSE   : 'false';
 OR      : '||';
 AND     : '&&';
 IF      : 'if';
