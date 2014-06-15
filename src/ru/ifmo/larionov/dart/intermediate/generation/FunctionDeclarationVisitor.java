@@ -22,6 +22,7 @@ import static ru.ifmo.larionov.dart.intermediate.generation.TypeChecker.typeChec
 public class FunctionDeclarationVisitor {
     private SymbolTable symbolTable;
     private ClassWriter writer;
+    private MethodVisitor method;
 
     public FunctionDeclarationVisitor(SymbolTable symbolTable, ClassWriter writer) {
         this.symbolTable = symbolTable;
@@ -45,9 +46,9 @@ public class FunctionDeclarationVisitor {
             }
             descriptor = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(String[].class));
         }
-        MethodVisitor method = writer.visitMethod(ACC_PUBLIC | ACC_STATIC, f.getName(), descriptor, null, null);
+        method = writer.visitMethod(ACC_PUBLIC | ACC_STATIC, f.getName(), descriptor, null, null);
 
-        visitBlock(function.functionBody().block(), method);
+        visitBlock(function.functionBody().block());
 
         method.visitInsn(Opcodes.RETURN);
         method.visitMaxs(0, 0);
@@ -56,25 +57,41 @@ public class FunctionDeclarationVisitor {
         symbolTable.dropScope();
     }
 
-    private void visitBlock(BlockContext block, MethodVisitor method) {
+    private void visitBlock(BlockContext block) {
         symbolTable.newScope();
         for (BlockStatementContext blockStatement : block.blockStatement()) {
-            visitBlockStatement(blockStatement, method);
+            visitBlockStatement(blockStatement);
         }
         symbolTable.dropScope();
     }
 
-    private void visitBlockStatement(BlockStatementContext blockStatement, MethodVisitor method) {
+    private void visitBlockStatement(BlockStatementContext blockStatement) {
         if (blockStatement.variableDeclarationStatement() != null) {
             visitVariableDeclaration(blockStatement.variableDeclarationStatement().variableDeclaration(), method);
         } else {
-            visitStatement(blockStatement.statement(), method);
+            visitStatement(blockStatement.statement());
         }
     }
 
-    private void visitStatement(StatementContext statement, MethodVisitor method) {
+    private void visitStatement(StatementContext statement) {
         if (statement.expression() != null) {
             new ExpressionVisitor(symbolTable, method).visitExpression(statement.expression());
+        } else if (statement.assignment() != null) {
+            visitAssignment(statement.assignment(), method);
+        } else if (statement.block() != null) {
+            visitBlock(statement.block());
+        }
+    }
+
+    private void visitAssignment(AssignmentContext assignment, MethodVisitor method) {
+        String name = assignment.IDENT().getText();
+        Variable variable = symbolTable.findVariable(name);
+        if (assignment.arrayIdent() == null) {
+            ValueType valueType = new ExpressionVisitor(symbolTable, method).visitExpression(assignment.expression());
+            typeCheck(variable.getValueType(), valueType, assignment.getText());
+            method.visitVarInsn(ISTORE, variable.getId());
+        } else {
+            // TODO array assignment
         }
     }
 

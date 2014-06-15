@@ -6,6 +6,8 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import ru.ifmo.larionov.dart.intermediate.*;
 
+import java.util.Collections;
+
 import static org.objectweb.asm.Opcodes.*;
 import static ru.ifmo.larionov.dart.grammar.SimpleDartWithArraysParser.*;
 import static ru.ifmo.larionov.dart.intermediate.ValueType.INT;
@@ -54,5 +56,8 @@ public class CodeGenerator {
     private void addImportedFunctions() {
         Function print = new FunctionImpl("print", ValueType.VOID, Arrays.<Variable>asList(new Variable[]{new VariableImpl("arg", INT)}));
         symbolTable.defineFunction(print);
+
+        Function readInt = new FunctionImpl("readInt", ValueType.INT, Collections.<Variable>emptyList());
+        symbolTable.defineFunction(readInt);
     }
 }

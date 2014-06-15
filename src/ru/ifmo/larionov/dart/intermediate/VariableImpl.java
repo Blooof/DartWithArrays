@@ -1,5 +1,7 @@
 package ru.ifmo.larionov.dart.intermediate;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Objects;
 
 /**
@@ -11,6 +13,7 @@ public class VariableImpl implements Variable {
     private int id;
 
     public VariableImpl(String name, ValueType valueType) {
+        Preconditions.checkArgument(valueType != ValueType.VOID, "Variable cannot have type VOID");
         this.name = name;
         this.valueType = valueType;
     }

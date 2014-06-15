@@ -22,11 +22,7 @@ public class ExpressionVisitor {
     }
 
     public ValueType visitExpression(SimpleDartWithArraysParser.ExpressionContext expression) {
-        if (expression.ariphExpression() != null) {
-            return visitAriphExpression(expression.ariphExpression());
-        } else {
-            return new FunctionCallVisitor(symbolTable, method).visitFunctionCall(expression.funcCall());
-        }
+        return visitAriphExpression(expression.ariphExpression());
     }
 
     private ValueType visitSimpleExpression(SimpleDartWithArraysParser.SimpleExpressionContext simple) {
@@ -43,6 +39,8 @@ public class ExpressionVisitor {
                 }
                 return var.getValueType();
             }
+        } else if (simple.funcCall() != null) {
+            return new FunctionCallVisitor(symbolTable, method).visitFunctionCall(simple.funcCall());
         } else {
             return visitExpression(simple.expression());
         }

@@ -1,14 +1,12 @@
 package ru.ifmo.larionov.dart.intermediate.exception;
 
-import ru.ifmo.larionov.dart.intermediate.ValueType;
-
-import static java.util.Arrays.deepToString;
+import static java.lang.String.format;
 
 /**
  * @author Oleg Larionov
  */
 public class FunctionNotDefinedException extends NotDefinedException {
-    public FunctionNotDefinedException(String name, ValueType... argumentValueTypes) {
-        super("Function " + name + " with arguments" + deepToString(argumentValueTypes) + " not defined in this scope.");
+    public FunctionNotDefinedException(String name) {
+        super(format("Function %s not defined in this scope.", name));
     }
 }

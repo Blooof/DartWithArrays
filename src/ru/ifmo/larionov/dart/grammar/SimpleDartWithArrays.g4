@@ -26,14 +26,14 @@ blockStatement : variableDeclarationStatement | statement;
 
 statement 
     : block
-    | assignment
+    | assignment SEMICOLON
     | expression? SEMICOLON
     | IF parExpression statement (ELSE statement)? 
     | forStatement
     | WHILE parExpression statement
     | jumpStatement;
 
-assignment : IDENT EQUAL expression;
+assignment : IDENT arrayIdent? EQUAL expression;
 
 forStatement : FOR LPAREN forControl RPAREN statement;
 
@@ -53,7 +53,7 @@ jumpStatement
 
 arrayInitializer : LSQUARE expressionList RSQUARE; 
 
-expression : funcCall | ariphExpression;
+expression : ariphExpression;
 
 funcCall : IDENT LPAREN expressionList? RPAREN;
 
@@ -65,7 +65,8 @@ relationalExpr : ariphExpression REL_OP ariphExpression;
 
 simpleExpression 
     : ident=IDENT arrayIdent?
-    | newExpr=LPAREN expression RPAREN;
+    | newExpr=LPAREN expression RPAREN
+    | funcCall;
 
 arrayIdent : LSQUARE NUM_INT RSQUARE;
 
@@ -123,14 +124,12 @@ MORE    : '>';
 REL_OP  : EE | NE | GE | LE | LESS | MORE;
 OR      : '||';
 AND     : '&&';
-NEW     : 'new';
 IF      : 'if';
 ELSE    : 'else';
 FOR     : 'for';
 WHILE   : 'while';
 BREAK   : 'break';
 CONTINUE: 'continue';
-LENGTH  : 'length';
 SEMICOLON : ';';
 DOT     : '.';
 NUM_INT : ('0'..'9')+;
