@@ -11,6 +11,7 @@ import java.util.List;
  */
 public class HashStackSymbolTable implements SymbolTable {
     private List<Scope> scopes;
+    private int varCounter;
 
     public HashStackSymbolTable() {
         scopes = new ArrayList<>();
@@ -28,10 +29,16 @@ public class HashStackSymbolTable implements SymbolTable {
             throw new IllegalStateException("Cannot drop global scope.");
         }
         scopes.remove(scopes.size() - 1);
+        if (scopes.size() == 1) {
+            varCounter = 0;
+        }
     }
 
     @Override
     public void defineVariable(Variable v) {
+        if (scopes.size() > 1) {
+            v.setId(varCounter++);
+        }
         scopes.get(scopes.size() - 1).defineVariable(v);
     }
 

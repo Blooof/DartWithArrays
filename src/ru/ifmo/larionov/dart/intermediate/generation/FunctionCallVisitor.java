@@ -58,6 +58,20 @@ public class FunctionCallVisitor {
                 method.visitMethodInsn(INVOKESTATIC, getInternalName(Integer.class), "parseInt",
                         getMethodDescriptor(INT_TYPE, getType(String.class)), false);
                 return ValueType.INT;
+            case "length":
+                expressionList = functionCall.expressionList();
+                args = visitArgs(expressionList);
+                typeCheck(function, args, functionCall.getText());
+
+                method.visitInsn(ARRAYLENGTH);
+                return ValueType.INT;
+            case "list":
+                expressionList = functionCall.expressionList();
+                args = visitArgs(expressionList);
+                typeCheck(function, args, functionCall.getText());
+
+                method.visitIntInsn(NEWARRAY, T_INT);
+                return ValueType.LIST;
             default:
                 expressionList = functionCall.expressionList();
                 args = visitArgs(expressionList);

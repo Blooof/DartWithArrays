@@ -27,7 +27,6 @@ public class HashScope implements Scope {
         if (variables.containsKey(v.getName())) {
             throw new VariableAlreadyDefinedException(v);
         }
-        v.setId(variables.size());
         variables.put(v.getName(), v);
     }
 

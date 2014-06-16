@@ -23,6 +23,8 @@ public class CycleStatementVisitor {
     }
 
     public void visitForStatement(ForStatementContext forStatement) {
+        symbolTable.newScope();
+
         Label a = new Label();
         Label b = new Label();
         Label c = new Label();
@@ -47,6 +49,8 @@ public class CycleStatementVisitor {
         method.visitJumpInsn(GOTO, a);
         method.visitLabel(b);
         functionDeclarationVisitor.getCycleControl().drop();
+
+        symbolTable.dropScope();
     }
 
     public void visitWhileStatement(StatementContext whileStatement) {

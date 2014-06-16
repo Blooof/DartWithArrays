@@ -59,7 +59,7 @@ public class FunctionDeclarationVisitor {
         }
         method = writer.visitMethod(ACC_PUBLIC | ACC_STATIC, f.getName(), descriptor, null, null);
 
-        visitBlock(function.functionBody().block(), false);
+        visitBlock(function.functionBody().block());
 
         method.visitInsn(Opcodes.RETURN);
         method.visitMaxs(0, 0);
@@ -68,16 +68,14 @@ public class FunctionDeclarationVisitor {
         symbolTable.dropScope();
     }
 
-    private void visitBlock(BlockContext block, boolean newScope) {
-        if (newScope) {
-            symbolTable.newScope();
-        }
+    private void visitBlock(BlockContext block) {
+        symbolTable.newScope();
+
         for (BlockStatementContext blockStatement : block.blockStatement()) {
             visitBlockStatement(blockStatement);
         }
-        if (newScope) {
-            symbolTable.dropScope();
-        }
+
+        symbolTable.dropScope();
     }
 
     private void visitBlockStatement(BlockStatementContext blockStatement) {
@@ -95,7 +93,7 @@ public class FunctionDeclarationVisitor {
         } else if (statement.assignment() != null) {
             new AssignmentVisitor(symbolTable, method).visitAssignment(statement.assignment());
         } else if (statement.block() != null) {
-            visitBlock(statement.block(), true);
+            visitBlock(statement.block());
         } else if (statement.jumpStatement() != null) {
             visitJumpStatement(statement.jumpStatement());
         } else if (statement.IF() != null) {

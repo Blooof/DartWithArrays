@@ -14,12 +14,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static java.lang.String.format;
+import static org.codehaus.plexus.util.FileUtils.fileRead;
 
 public class Main {
     public static void main(String[] args) throws PrintException {
         try {
-            CharStream input = new ANTLRFileStream("test.txt");
-            Lexer lexer = new SimpleDartWithArraysLexer(input);
+            String input = fileRead("test.dart");
+            String include = fileRead("resources/dartInclude.dart");
+            String result = format("%s\n%s", include, input);
+            CharStream antlrStream = new ANTLRInputStream(result);
+            Lexer lexer = new SimpleDartWithArraysLexer(antlrStream);
             SimpleDartWithArraysParser parser = new SimpleDartWithArraysParser(new CommonTokenStream(lexer));
             parser.addErrorListener(new BaseErrorListener() {
                 @Override
