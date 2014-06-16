@@ -30,12 +30,21 @@ public class ExpressionVisitor {
             String name = simple.IDENT().getText();
             Variable var = symbolTable.findVariable(name);
             if (simple.arrayIdent() != null) {
-                return null;
+                typeCheck(var.getValueType(), ValueType.LIST, simple.getText());
+                if (symbolTable.isGlobalVariable(name)) {
+                    method.visitFieldInsn(GETSTATIC, CodeGenerator.CLASS_NAME, name, var.getValueType().getDescriptor());
+                } else {
+                    method.visitVarInsn(ALOAD, var.getId());
+                }
+                ValueType index = new ExpressionVisitor(symbolTable, method).visitExpression(simple.arrayIdent().expression());
+                typeCheck(index, ValueType.INT, simple.getText());
+                method.visitInsn(IALOAD);
+                return ValueType.INT;
             } else {
                 if (symbolTable.isGlobalVariable(name)) {
                     method.visitFieldInsn(GETSTATIC, CodeGenerator.CLASS_NAME, name, var.getValueType().getDescriptor());
                 } else {
-                    method.visitVarInsn(ILOAD, var.getId());
+                    method.visitVarInsn(var.getValueType() == ValueType.LIST ? ALOAD : ILOAD, var.getId());
                 }
                 return var.getValueType();
             }

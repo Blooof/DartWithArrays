@@ -115,7 +115,7 @@ public class FunctionDeclarationVisitor {
             } else {
                 ValueType valueType = new ExpressionVisitor(symbolTable, method).visitExpression(jumpStatement.expression());
                 typeCheck(returnType, valueType, jumpStatement.getText());
-                method.visitInsn(IRETURN);
+                method.visitInsn(valueType == ValueType.LIST ? ARETURN : IRETURN);
             }
             return;
         } else if (jumpStatement.breakSt != null) {

@@ -32,7 +32,7 @@ statement
     | WHILE parExpression statement
     | jumpStatement;
 
-assignment : IDENT arrayIdent? EQUAL expression;
+assignment : IDENT arrayIdent? EQUAL (expression | arrayInitializer);
 
 forStatement : FOR LPAREN forControl RPAREN statement;
 
@@ -69,7 +69,7 @@ simpleExpression
     | newExpr=LPAREN expression RPAREN
     | funcCall;
 
-arrayIdent : LSQUARE NUM_INT RSQUARE;
+arrayIdent : LSQUARE expression RSQUARE;
 
 expressionList : expression (COMMA expression)*;
 

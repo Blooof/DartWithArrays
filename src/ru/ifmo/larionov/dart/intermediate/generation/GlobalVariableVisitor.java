@@ -2,14 +2,10 @@ package ru.ifmo.larionov.dart.intermediate.generation;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import ru.ifmo.larionov.dart.intermediate.SymbolTable;
 import ru.ifmo.larionov.dart.intermediate.ValueType;
 import ru.ifmo.larionov.dart.intermediate.Variable;
 import ru.ifmo.larionov.dart.intermediate.VariableImpl;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
 import static ru.ifmo.larionov.dart.grammar.SimpleDartWithArraysParser.*;
@@ -39,12 +35,7 @@ public class GlobalVariableVisitor {
                 VariableInitializerContext initializer = declarator.variableInitializer();
                 if (initializer.arrayInitializer() != null) {
                     typeCheck(valueType, ValueType.LIST, globalVariableContext.getText());
-                    ExpressionListContext expressionList = initializer.arrayInitializer().expressionList();
-                    int arraySize = expressionList != null ? expressionList.expression().size() : 0;
-                    method.visitLdcInsn(arraySize);
-                    method.visitIntInsn(NEWARRAY, Opcodes.T_INT);
-                    method.visitFieldInsn(PUTSTATIC, CodeGenerator.CLASS_NAME, name, valueType.getDescriptor());
-                    visitArrayInitializer(variable, method, initializer.arrayInitializer());
+                    new ArrayInitializerVisitor(symbolTable, method).visitArrayInitializer(variable, initializer.arrayInitializer());
                 } else {
                     ValueType exprType = new ExpressionVisitor(symbolTable, method).visitExpression(initializer.expression());
                     typeCheck(valueType, exprType, globalVariableContext.getText());
@@ -53,21 +44,5 @@ public class GlobalVariableVisitor {
             }
 
         }
-    }
-
-    private List<ValueType> visitArrayInitializer(Variable variable, MethodVisitor method, ArrayInitializerContext arrayInitializer) {
-        List<ValueType> valueTypes = new ArrayList<>();
-        ExpressionListContext expressionList = arrayInitializer.expressionList();
-        if (expressionList != null) {
-            int i = 0;
-            for (ExpressionContext expression : expressionList.expression()) {
-                method.visitFieldInsn(GETSTATIC, CodeGenerator.CLASS_NAME, variable.getName(), variable.getValueType().getDescriptor());
-                method.visitLdcInsn(i++);
-                ValueType type = new ExpressionVisitor(symbolTable, method).visitExpression(expression);
-                valueTypes.add(type);
-                method.visitInsn(IASTORE);
-            }
-        }
-        return valueTypes;
     }
 }
