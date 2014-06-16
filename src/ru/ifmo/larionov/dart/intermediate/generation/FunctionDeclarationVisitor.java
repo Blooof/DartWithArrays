@@ -59,13 +59,36 @@ public class FunctionDeclarationVisitor {
         }
         method = writer.visitMethod(ACC_PUBLIC | ACC_STATIC, f.getName(), descriptor, null, null);
 
-        visitBlock(function.functionBody().block());
+        BlockContext block = function.functionBody().block();
+        visitBlock(block);
+        checkReturn(block);
 
-        method.visitInsn(Opcodes.RETURN);
         method.visitMaxs(0, 0);
         method.visitEnd();
 
         symbolTable.dropScope();
+    }
+
+    private void checkReturn(BlockContext block) {
+        if (returnType == ValueType.VOID) {
+            method.visitInsn(Opcodes.RETURN);
+            return;
+        }
+        if (block.blockStatement() != null) {
+            int lastStatement = block.blockStatement().size() - 1;
+            BlockStatementContext blockStatement = block.blockStatement(lastStatement);
+            if (blockStatement.statement() != null) {
+                StatementContext statement = blockStatement.statement();
+                if (statement.jumpStatement() != null) {
+                    JumpStatementContext jumpStatement = statement.jumpStatement();
+                    if (jumpStatement.returnSt != null) {
+                        return;
+                    }
+                }
+            }
+        }
+        throw new GenerationException("Last statement of function with non-null return type must be return. String: "
+                + block.getText());
     }
 
     private void visitBlock(BlockContext block) {

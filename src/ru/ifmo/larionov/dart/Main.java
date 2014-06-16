@@ -21,7 +21,8 @@ public class Main {
         try {
             String input = fileRead("test.dart");
             String include = fileRead("resources/dartInclude.dart");
-            String result = format("%s\n%s", include, input);
+            include = "";
+            String result = format("%s\n%s", input, include);
             CharStream antlrStream = new ANTLRInputStream(result);
             Lexer lexer = new SimpleDartWithArraysLexer(antlrStream);
             SimpleDartWithArraysParser parser = new SimpleDartWithArraysParser(new CommonTokenStream(lexer));
