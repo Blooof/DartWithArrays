@@ -102,6 +102,8 @@ public class FunctionDeclarationVisitor {
             new IfStatementVisitor(this, symbolTable, method).visitIfStatement(statement);
         } else if (statement.forStatement() != null) {
             new CycleStatementVisitor(this, symbolTable, method).visitForStatement(statement.forStatement());
+        } else if (statement.WHILE() != null) {
+            new CycleStatementVisitor(this, symbolTable, method).visitWhileStatement(statement);
         }
     }
 

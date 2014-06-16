@@ -50,7 +50,7 @@ jumpStatement
       | returnSt=RETURN expression?
       ) SEMICOLON;
 
-arrayInitializer : LSQUARE expressionList RSQUARE; 
+arrayInitializer : LSQUARE expressionList? RSQUARE;
 
 expression : ariphExpression;
 

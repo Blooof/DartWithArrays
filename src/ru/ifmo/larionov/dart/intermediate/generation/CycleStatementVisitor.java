@@ -48,4 +48,17 @@ public class CycleStatementVisitor {
         method.visitLabel(b);
         functionDeclarationVisitor.getCycleControl().drop();
     }
+
+    public void visitWhileStatement(StatementContext whileStatement) {
+        Label a = new Label();
+        Label b = new Label();
+        functionDeclarationVisitor.getCycleControl().save(b, a);
+        method.visitLabel(a);
+        new LogicalExpressionVisitor(symbolTable, method).visitOrExpression(whileStatement.parExpression().logicalOr());
+        method.visitJumpInsn(IFEQ, b);
+        functionDeclarationVisitor.visitStatement(whileStatement.statement(0));
+        method.visitJumpInsn(GOTO, a);
+        method.visitLabel(b);
+        functionDeclarationVisitor.getCycleControl().drop();
+    }
 }
